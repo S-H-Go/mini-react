@@ -1,3 +1,5 @@
+const Fragment = 0
+
 function createTextNode(nodeValue) {
   return {
     type: 'TEXT_ELEMENT',
@@ -16,6 +18,8 @@ function createElement(type, props, ...children) {
       children: children.map((child) => {
         if (typeof child === 'string' || typeof child === 'number') {
           return createTextNode(child)
+        } else if (Array.isArray(child)) {
+          return createElement(Fragment, null, ...child)
         } else {
           return child
         }
@@ -29,6 +33,8 @@ function render(vdom, container) {
   // 根据不同的vdom类型创建对应的真实dom
   if (vdom.type === 'TEXT_ELEMENT') {
     dom = document.createTextNode('')
+  } else if (vdom.type === Fragment) {
+    dom = document.createDocumentFragment()
   } else {
     dom = document.createElement(vdom.type)
   }
@@ -49,6 +55,7 @@ function render(vdom, container) {
 const React = {
   createElement,
   render,
+  Fragment,
 }
 
 export default React
