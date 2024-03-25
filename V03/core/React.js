@@ -35,8 +35,9 @@ function render(vdom, container) {
       children: [vdom],
     },
   }
+  root = nextWorkOfUnit
 }
-
+let root = null
 let nextWorkOfUnit = {}
 function workLoop(DealLine) {
   let shouldYield = false
@@ -44,10 +45,24 @@ function workLoop(DealLine) {
     nextWorkOfUnit = preformWorkOfUnit(nextWorkOfUnit)
     shouldYield = DealLine.timeRemaining() < 1
   }
+  if (!nextWorkOfUnit && root) {
+    commitRoot()
+  }
 
   requestIdleCallback(workLoop)
 }
 
+function commitRoot() {
+  commitWork(root.child)
+  root = null
+}
+
+function commitWork(root) {
+  if (!root) return
+  root.parent.dom.append(root.dom)
+  commitWork(root.child)
+  commitWork(root.sibling)
+}
 requestIdleCallback(workLoop)
 function createDom(type) {
   // 根据不同的vdom类型创建对应的真实dom
@@ -91,8 +106,6 @@ function initChildren(fiber) {
 function preformWorkOfUnit(fiber) {
   if (!fiber.dom) {
     fiber.dom = createDom(fiber.type)
-
-    fiber.parent.dom.append(fiber.dom)
 
     updateProps(fiber.dom, fiber.props)
   }
