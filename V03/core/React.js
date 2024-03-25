@@ -57,11 +57,18 @@ function commitRoot() {
   root = null
 }
 
-function commitWork(root) {
-  if (!root) return
-  root.parent.dom.append(root.dom)
-  commitWork(root.child)
-  commitWork(root.sibling)
+function commitWork(fiber) {
+  if (!fiber) return
+
+  let fiberParent = fiber.parent
+  while (!fiberParent.dom) {
+    fiberParent = fiberParent.parent
+  }
+  if (fiber.dom) {
+    fiberParent.dom.append(fiber.dom)
+  }
+  commitWork(fiber.child)
+  commitWork(fiber.sibling)
 }
 requestIdleCallback(workLoop)
 function createDom(type) {
@@ -83,8 +90,7 @@ function updateProps(dom, props) {
   })
 }
 
-function initChildren(fiber) {
-  const children = fiber.props.children
+function initChildren(fiber, children) {
   let prevChild = null
   children.forEach((child, index) => {
     const newFiber = {
@@ -103,22 +109,34 @@ function initChildren(fiber) {
     prevChild = newFiber
   })
 }
-function preformWorkOfUnit(fiber) {
+
+function updateFunctionComponent(fiber) {
+  const children = [fiber.type(fiber.props)]
+  initChildren(fiber, children)
+}
+
+function updateHostComponent(fiber) {
   if (!fiber.dom) {
     fiber.dom = createDom(fiber.type)
-
     updateProps(fiber.dom, fiber.props)
   }
   // 转换成链表结构
-  initChildren(fiber)
+  const children = fiber.props.children
+  initChildren(fiber, children)
+}
+function preformWorkOfUnit(fiber) {
+  const isFunctionComponent = typeof fiber.type === 'function'
+  isFunctionComponent ? updateFunctionComponent(fiber) : updateHostComponent(fiber)
+
   // 返回下一次空闲时间要调度的任务
   if (fiber.child) {
     return fiber.child
   }
-  if (fiber.sibling) {
-    return fiber.sibling
+  let prevFiber = fiber
+  while (prevFiber) {
+    if (prevFiber.sibling) return prevFiber.sibling
+    prevFiber = prevFiber.parent
   }
-  return fiber.parent?.sibling
 }
 const React = {
   createElement,
