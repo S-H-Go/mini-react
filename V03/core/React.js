@@ -85,7 +85,11 @@ function createDom(type) {
 function updateProps(dom, props) {
   Object.keys(props).forEach((key) => {
     if (key !== 'children') {
-      dom[key] = props[key]
+      if (key.startsWith('on')) {
+        dom.addEventListener(key.toLowerCase().slice(2), props[key])
+      } else {
+        dom[key] = props[key]
+      }
     }
   })
 }

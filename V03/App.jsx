@@ -35,15 +35,21 @@ console.log(document.querySelector('#btn'))
 //   </>
 // )
 function Counter({ count }) {
-  return <div>{count}</div>
+  return (
+    <div>
+      count: {count} <button onClick={handleClick}>click</button>
+    </div>
+  )
 }
-
+function handleClick() {
+  num++
+  console.log(num)
+}
 function App() {
   return (
     <div>
       Count:
-      <Counter count="123"></Counter>
-      <Counter count="456"></Counter>
+      <Counter count={num}></Counter>
     </div>
   )
 }
