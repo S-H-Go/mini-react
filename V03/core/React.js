@@ -29,15 +29,25 @@ function createElement(type, props, ...children) {
 }
 
 function render(vdom, container) {
-  nextWorkOfUnit = {
+  wipRoot = {
     dom: container,
     props: {
       children: [vdom],
     },
   }
-  root = nextWorkOfUnit
+  nextWorkOfUnit = wipRoot
 }
-let root = null
+
+function update() {
+  wipRoot = {
+    dom: currentRoot.dom,
+    props: currentRoot.props,
+    alternate: currentRoot,
+  }
+  nextWorkOfUnit = wipRoot
+}
+let wipRoot = null
+let currentRoot = null
 let nextWorkOfUnit = {}
 function workLoop(DealLine) {
   let shouldYield = false
@@ -45,7 +55,7 @@ function workLoop(DealLine) {
     nextWorkOfUnit = preformWorkOfUnit(nextWorkOfUnit)
     shouldYield = DealLine.timeRemaining() < 1
   }
-  if (!nextWorkOfUnit && root) {
+  if (!nextWorkOfUnit && wipRoot) {
     commitRoot()
   }
 
@@ -53,8 +63,9 @@ function workLoop(DealLine) {
 }
 
 function commitRoot() {
-  commitWork(root.child)
-  root = null
+  commitWork(wipRoot.child)
+  currentRoot = wipRoot
+  wipRoot = null
 }
 
 function commitWork(fiber) {
@@ -64,8 +75,12 @@ function commitWork(fiber) {
   while (!fiberParent.dom) {
     fiberParent = fiberParent.parent
   }
-  if (fiber.dom) {
-    fiberParent.dom.append(fiber.dom)
+  if (fiber.effectTag === 'update') {
+    updateProps(fiber.dom, fiber.props, fiber.alternate.props)
+  } else if (fiber.effectTag === 'placement') {
+    if (fiber.dom) {
+      fiberParent.dom.append(fiber.dom)
+    }
   }
   commitWork(fiber.child)
   commitWork(fiber.sibling)
@@ -82,28 +97,59 @@ function createDom(type) {
   }
 }
 
-function updateProps(dom, props) {
-  Object.keys(props).forEach((key) => {
+function updateProps(dom, nextProps, prevProps) {
+  Object.keys(prevProps).forEach((key) => {
     if (key !== 'children') {
-      if (key.startsWith('on')) {
-        dom.addEventListener(key.toLowerCase().slice(2), props[key])
-      } else {
-        dom[key] = props[key]
+      if (!(key in nextProps)) {
+        dom.removeAttribute(key)
       }
+    }
+  })
+
+  Object.keys(nextProps).forEach((key) => {
+    if (key !== 'children') {
+      if (nextProps[key] !== prevProps[key])
+        if (key.startsWith('on')) {
+          const eventType = key.toLowerCase().slice(2)
+          dom.removeEventListener(eventType, prevProps[key])
+          dom.addEventListener(eventType, nextProps[key])
+        } else {
+          dom[key] = nextProps[key]
+        }
     }
   })
 }
 
-function initChildren(fiber, children) {
+function reconcileChildren(fiber, children) {
   let prevChild = null
+  let oldFiber = fiber.alternate?.child
   children.forEach((child, index) => {
-    const newFiber = {
-      type: child.type,
-      props: child.props,
-      child: null,
-      parent: fiber,
-      sibling: null,
-      dom: null,
+    const isSameType = oldFiber && oldFiber.type === child.type
+    let newFiber
+    if (isSameType) {
+      newFiber = {
+        type: child.type,
+        props: child.props,
+        child: null,
+        parent: fiber,
+        sibling: null,
+        dom: oldFiber.dom,
+        alternate: oldFiber,
+        effectTag: 'update',
+      }
+    } else {
+      newFiber = {
+        type: child.type,
+        props: child.props,
+        child: null,
+        parent: fiber,
+        sibling: null,
+        dom: null,
+        effectTag: 'placement',
+      }
+    }
+    if (oldFiber) {
+      oldFiber = oldFiber.sibling
     }
     if (index === 0) {
       fiber.child = newFiber
@@ -116,17 +162,17 @@ function initChildren(fiber, children) {
 
 function updateFunctionComponent(fiber) {
   const children = [fiber.type(fiber.props)]
-  initChildren(fiber, children)
+  reconcileChildren(fiber, children)
 }
 
 function updateHostComponent(fiber) {
   if (!fiber.dom) {
     fiber.dom = createDom(fiber.type)
-    updateProps(fiber.dom, fiber.props)
+    updateProps(fiber.dom, fiber.props, {})
   }
   // 转换成链表结构
   const children = fiber.props.children
-  initChildren(fiber, children)
+  reconcileChildren(fiber, children)
 }
 function preformWorkOfUnit(fiber) {
   const isFunctionComponent = typeof fiber.type === 'function'
@@ -143,6 +189,7 @@ function preformWorkOfUnit(fiber) {
   }
 }
 const React = {
+  update,
   createElement,
   render,
   Fragment,
