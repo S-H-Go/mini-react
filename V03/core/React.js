@@ -70,15 +70,14 @@ function commitRoot() {
 
 function commitWork(fiber) {
   if (!fiber) return
-
   let fiberParent = fiber.parent
   while (!fiberParent.dom) {
     fiberParent = fiberParent.parent
   }
-  if (fiber.effectTag === 'update') {
-    updateProps(fiber.dom, fiber.props, fiber.alternate.props)
-  } else if (fiber.effectTag === 'placement') {
-    if (fiber.dom) {
+  if (fiber.dom) {
+    if (fiber.effectTag === 'update') {
+      updateProps(fiber.dom, fiber.props, fiber.alternate.props)
+    } else if (fiber.effectTag === 'placement') {
       fiberParent.dom.append(fiber.dom)
     }
   }

@@ -18,7 +18,7 @@ function App() {
   return (
     <div>
       hello-world
-      <Counter num={10}></Counter>
+      <Counter num={count}></Counter>
     </div>
   )
 }
