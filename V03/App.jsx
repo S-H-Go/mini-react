@@ -8,14 +8,18 @@ function Counter({ num }) {
     showFoo = !showFoo
     React.update()
   }
-  function Foo() {
-    return <p>foo</p>
-  }
-  const bar = <p>bar</p>
+  const foo = (
+    <div>
+      foo
+      <div>child1</div>
+      <div>child2</div>
+    </div>
+  )
+  const bar = <div>bar</div>
   return (
     <div>
       <button onClick={handleClick}>click</button>
-      {showFoo ? <Foo></Foo> : bar}
+      <div>{showFoo ? foo : bar}</div>
     </div>
   )
 }

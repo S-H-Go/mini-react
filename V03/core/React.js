@@ -175,6 +175,11 @@ function reconcileChildren(fiber, children) {
     }
     prevChild = newFiber
   })
+  // 删除多余的节点
+  while (oldFiber) {
+    deletions.push(oldFiber)
+    oldFiber = oldFiber.sibling
+  }
 }
 
 function updateFunctionComponent(fiber) {
