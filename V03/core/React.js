@@ -39,21 +39,27 @@ function render(vdom, container) {
 }
 
 function update() {
-  wipRoot = {
-    dom: currentRoot.dom,
-    props: currentRoot.props,
-    alternate: currentRoot,
+  const currentFiber = wipFiber
+  return () => {
+    wipRoot = {
+      ...currentFiber,
+      alternate: currentFiber,
+    }
+    nextWorkOfUnit = wipRoot
   }
-  nextWorkOfUnit = wipRoot
 }
 let wipRoot = null
 let currentRoot = null
 let nextWorkOfUnit = {}
 let deletions = []
+let wipFiber = null
 function workLoop(DealLine) {
   let shouldYield = false
   while (!shouldYield && nextWorkOfUnit) {
     nextWorkOfUnit = preformWorkOfUnit(nextWorkOfUnit)
+    if (wipRoot?.sibling?.type === nextWorkOfUnit?.type) {
+      nextWorkOfUnit = null
+    }
     shouldYield = DealLine.timeRemaining() < 1
   }
   if (!nextWorkOfUnit && wipRoot) {
@@ -170,11 +176,29 @@ function reconcileChildren(fiber, children) {
     if (oldFiber) {
       oldFiber = oldFiber.sibling
     }
-    if (!fiber.child) {
+    // if (!fiber.child && newFiber) {
+    //   fiber.child = newFiber
+    // }
+    // if (fiber.child) {
+    //   prevChild.sibling = newFiber
+    // }
+    // TODO 搞不懂 只有这样才不报错
+    if (index === 0 || !prevChild) {
       fiber.child = newFiber
     } else {
       prevChild.sibling = newFiber
     }
+    // if (index === 0) {
+    //   fiber.child = newFiber
+    // } else {
+    //   prevChild.sibling = newFiber
+    // }
+    // if (!fiber.child) {
+    //   fiber.child = newFiber
+    // } else {
+    //   console.log(fiber)
+    //   prevChild.sibling = newFiber
+    // }
     if (newFiber) {
       prevChild = newFiber
     }
@@ -187,6 +211,7 @@ function reconcileChildren(fiber, children) {
 }
 
 function updateFunctionComponent(fiber) {
+  wipFiber = fiber
   const children = [fiber.type(fiber.props)]
   reconcileChildren(fiber, children)
 }
