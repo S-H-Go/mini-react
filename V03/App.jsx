@@ -18,8 +18,19 @@ function Counter({ num }) {
   const bar = <div>bar</div>
   return (
     <div>
+      {showFoo && bar}
+      <div>foo1</div>
+      {showFoo && bar}
       <button onClick={handleClick}>click</button>
-      <div>{showFoo ? foo : bar}</div>
+      <div>foo2</div>
+      {showFoo && bar}
+      
+      {/* <div>{showFoo ? foo : bar}</div> */}
+
+      {/* {count % 2 !== 1 && <div>4</div>}
+      <button onClick={handleClick}>click</button>
+      {count % 2 === 1 ? <div>1</div>  : <div>2</div> }
+      {count % 2 === 1 && <div>3</div> } */}
     </div>
   )
 }

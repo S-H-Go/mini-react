@@ -152,14 +152,16 @@ function reconcileChildren(fiber, children) {
         effectTag: 'update',
       }
     } else {
-      newFiber = {
-        type: child.type,
-        props: child.props,
-        child: null,
-        parent: fiber,
-        sibling: null,
-        dom: null,
-        effectTag: 'placement',
+      if (child) {
+        newFiber = {
+          type: child.type,
+          props: child.props,
+          child: null,
+          parent: fiber,
+          sibling: null,
+          dom: null,
+          effectTag: 'placement',
+        }
       }
       if (oldFiber) {
         deletions.push(oldFiber)
@@ -168,12 +170,14 @@ function reconcileChildren(fiber, children) {
     if (oldFiber) {
       oldFiber = oldFiber.sibling
     }
-    if (index === 0) {
+    if (!fiber.child) {
       fiber.child = newFiber
     } else {
       prevChild.sibling = newFiber
     }
-    prevChild = newFiber
+    if (newFiber) {
+      prevChild = newFiber
+    }
   })
   // 删除多余的节点
   while (oldFiber) {
