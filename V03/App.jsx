@@ -36,7 +36,10 @@ function Bar() {
   const [count, setCount] = React.useState(10)
   const [num, setNum] = React.useState(20)
   function handleClick() {
-    setCount((c) => c + 1)
+    setCount(count + 1)
+    setCount(count + 1)
+    setCount(count + 1)
+
     setNum((n) => n + 2)
   }
   return (
