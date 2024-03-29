@@ -260,7 +260,13 @@ function useState(initial) {
   stateHooks.push(stateHook)
   currentFiber.stateHooks = stateHooks
   function setState(action) {
-    stateHook.queue.push(typeof action === 'function' ? action : () => action)
+    const _action = typeof action === 'function' ? action : () => action
+    // 取出上一次的 eagerState
+    const prevEagerState = stateHook.eagerState || stateHook.state
+    stateHook.eagerState = _action()
+    // 如果上一次的 state 的值和这次是相同的则不更新
+    if(prevEagerState === stateHook.eagerState) return 
+    stateHook.queue.push(_action)
     wipRoot = {
       ...currentFiber,
       alternate: currentFiber,
