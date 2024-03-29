@@ -33,12 +33,12 @@ import React from './core/React.js'
 let countBar = 0
 function Bar() {
   console.log('bar')
-  const [count, setCount] = React.useState(10)
+  const [count, setCount] = React.useState(1)
   const [num, setNum] = React.useState(20)
   function handleClick() {
-    setCount(count + 1)
-    setCount(count + 1)
-    setCount(count + 1)
+    setCount(1)
+    setCount(3)
+    setCount(1)
 
     setNum((n) => n + 2)
   }
@@ -56,7 +56,7 @@ function Foo() {
   console.log('foo')
   const update = React.update()
   function handleClick() {
-    countFoo++
+    ++countFoo
     update()
   }
   return (
