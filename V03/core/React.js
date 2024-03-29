@@ -213,6 +213,8 @@ function reconcileChildren(fiber, children) {
 
 function updateFunctionComponent(fiber) {
   wipFiber = fiber
+  stateHooks = []
+  stateHooksIndex = 0
   const children = [fiber.type(fiber.props)]
   reconcileChildren(fiber, children)
 }
@@ -240,10 +242,33 @@ function preformWorkOfUnit(fiber) {
     prevFiber = prevFiber.parent
   }
 }
+
+let stateHooks
+let stateHooksIndex
+function useState(initial) {
+  let currentFiber = wipFiber
+  const oldStateHook = currentFiber.alternate?.stateHooks[stateHooksIndex]
+  const stateHook = {
+    state: oldStateHook ? oldStateHook.state : initial,
+  }
+  stateHooksIndex++
+  stateHooks.push(stateHook)
+  currentFiber.stateHooks = stateHooks
+  function setState(action) {
+    stateHook.state = action(stateHook.state)
+    wipRoot = {
+      ...currentFiber,
+      alternate: currentFiber,
+    }
+    nextWorkOfUnit = wipRoot
+  }
+  return [stateHook.state, setState]
+}
 const React = {
   update,
   createElement,
   render,
+  useState,
   Fragment,
 }
 

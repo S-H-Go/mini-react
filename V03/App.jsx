@@ -33,15 +33,17 @@ import React from './core/React.js'
 let countBar = 0
 function Bar() {
   console.log('bar')
-  const update = React.update()
+  const [count, setCount] = React.useState(10)
+  const [num, setNum] = React.useState(20)
   function handleClick() {
-    countBar++
-    update()
+    setCount((c) => c + 1)
+    setNum((n) => n + 2)
   }
   return (
     <div>
       <h1>Bar</h1>
-      {countBar}
+      <div>count:{count}</div>
+      <div>num:{num}</div>
       <button onClick={handleClick}>Bar</button>
     </div>
   )
