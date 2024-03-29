@@ -11,19 +11,20 @@ function createTextNode(nodeValue) {
 }
 
 function createElement(type, props, ...children) {
+  function convertElement(child) {
+    return typeof child === 'object' ? child : createTextNode(child)
+  }
   return {
     type,
     props: {
       ...props,
-      children: children.map((child) => {
-        if (typeof child === 'string' || typeof child === 'number') {
-          return createTextNode(child)
-        } else if (Array.isArray(child)) {
-          return createElement(Fragment, null, ...child)
-        } else {
-          return child
+      children: children.reduce((prev, child) => {
+        if (!child) return [...prev]
+        if (Array.isArray(child)) {
+          return [...prev, ...child.map((c) => convertElement(c))]
         }
-      }),
+        return [...prev, convertElement(child)]
+      }, []),
     },
   }
 }
