@@ -58,7 +58,7 @@ function workLoop(DealLine) {
   let shouldYield = false
   while (!shouldYield && nextWorkOfUnit) {
     nextWorkOfUnit = preformWorkOfUnit(nextWorkOfUnit)
-    if (wipRoot?.sibling?.type === nextWorkOfUnit?.type) {
+    if (wipRoot?.sibling?.type === nextWorkOfUnit?.type && wipRoot?.sibling?.dom === nextWorkOfUnit?.dom) {
       nextWorkOfUnit = null
     }
     shouldYield = DealLine.timeRemaining() < 1
