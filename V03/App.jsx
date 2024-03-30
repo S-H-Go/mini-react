@@ -42,6 +42,13 @@ function Bar() {
 
     setNum((n) => n + 2)
   }
+  React.useEffect(() => {
+    console.log('init')
+  }, [])
+
+  React.useEffect(() => {
+    console.log('update', num)
+  }, [num])
   return (
     <div>
       <h1>Bar</h1>

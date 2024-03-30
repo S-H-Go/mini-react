@@ -73,9 +73,33 @@ function workLoop(DealLine) {
 function commitRoot() {
   deletions.forEach(commitDeletion)
   commitWork(wipRoot.child)
+  commitEffectHooks()
   currentRoot = wipRoot
   wipRoot = null
   deletions = []
+}
+
+function commitEffectHooks() {
+  function run(fiber) {
+    if (!fiber) return
+    if (fiber.alternate) {
+      // update
+      const oldEffectHooks = fiber.alternate.effectHooks
+      fiber.effectHooks?.forEach((newHook, hookIndex) => {
+        if (newHook.deps.length > 0) {
+          const needUpdate = newHook.deps.some((dep, depsIndex) => {
+            return dep !== oldEffectHooks[hookIndex].deps[depsIndex]
+          })
+          needUpdate && newHook.callback()
+        }
+      })
+    } else {
+      fiber.effectHooks?.forEach((hook) => hook.callback())
+    }
+    run(fiber.child)
+    run(fiber.sibling)
+  }
+  run(wipRoot)
 }
 
 function commitDeletion(fiber) {
@@ -215,6 +239,7 @@ function updateFunctionComponent(fiber) {
   wipFiber = fiber
   stateHooks = []
   stateHooksIndex = 0
+  effectHooks = []
   const children = [fiber.type(fiber.props)]
   reconcileChildren(fiber, children)
 }
@@ -275,11 +300,22 @@ function useState(initial) {
   }
   return [stateHook.state, setState]
 }
+
+let effectHooks
+function useEffect(callback, deps) {
+  const effectHook = {
+    callback,
+    deps,
+  }
+  effectHooks.push(effectHook)
+  wipFiber.effectHooks = effectHooks
+}
 const React = {
   update,
   createElement,
   render,
   useState,
+  useEffect,
   Fragment,
 }
 
