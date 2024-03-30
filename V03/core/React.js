@@ -84,21 +84,33 @@ function commitEffectHooks() {
     if (!fiber) return
     if (fiber.alternate) {
       // update
-      const oldEffectHooks = fiber.alternate.effectHooks
       fiber.effectHooks?.forEach((newHook, hookIndex) => {
-        if (newHook.deps.length > 0) {
-          const needUpdate = newHook.deps.some((dep, depsIndex) => {
-            return dep !== oldEffectHooks[hookIndex].deps[depsIndex]
-          })
-          needUpdate && newHook.callback()
-        }
+        const oldHook = fiber.alternate.effectHooks[hookIndex]
+        // 保存cleanup
+        newHook.cleanup = hasDepsAndIsUpdate(oldHook, newHook) ? newHook.callback() : oldHook.cleanup
       })
     } else {
-      fiber.effectHooks?.forEach((hook) => hook.callback())
+      fiber.effectHooks?.forEach((hook) => (hook.cleanup = hook.callback()))
     }
     run(fiber.child)
     run(fiber.sibling)
   }
+
+  function runCleanup(fiber) {
+    if (!fiber) return
+    fiber.alternate?.effectHooks?.forEach((oldHook, index) => {
+      const newHook = fiber.effectHooks?.[index]
+      if (hasDepsAndIsUpdate(oldHook, newHook)) {
+        oldHook.cleanup && oldHook.cleanup()
+      }
+    })
+  }
+
+  function hasDepsAndIsUpdate(oldHook, newHook) {
+    return newHook.deps.length > 0 && oldHook.deps.some((oldV, index) => oldV !== newHook.deps[index])
+  }
+
+  runCleanup(wipRoot)
   run(wipRoot)
 }
 
@@ -306,6 +318,7 @@ function useEffect(callback, deps) {
   const effectHook = {
     callback,
     deps,
+    cleanup: undefined,
   }
   effectHooks.push(effectHook)
   wipFiber.effectHooks = effectHooks

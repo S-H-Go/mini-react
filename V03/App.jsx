@@ -35,26 +35,35 @@ function Bar() {
   console.log('bar')
   const [count, setCount] = React.useState(1)
   const [num, setNum] = React.useState(20)
-  function handleClick() {
-    setCount(1)
-    setCount(3)
-    setCount(1)
 
-    setNum((n) => n + 2)
-  }
   React.useEffect(() => {
     console.log('init')
+    return () => {
+      console.log('init clean up')
+    }
   }, [])
 
   React.useEffect(() => {
-    console.log('update', num)
+    console.log('count update', count)
+    return () => {
+      console.log('count update clean up')
+    }
+  }, [count])
+
+  React.useEffect(() => {
+    console.log('num update', num)
+    return () => {
+      console.log('num update clean up')
+    }
   }, [num])
+
   return (
     <div>
       <h1>Bar</h1>
       <div>count:{count}</div>
       <div>num:{num}</div>
-      <button onClick={handleClick}>Bar</button>
+      <button onClick={() => setCount((c) => c + 1)}>count++</button>
+      <button onClick={() => setNum((n) => n + 2)}>num + 2</button>
     </div>
   )
 }
