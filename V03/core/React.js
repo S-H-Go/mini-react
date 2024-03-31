@@ -158,6 +158,10 @@ function updateProps(dom, nextProps, prevProps) {
           const eventType = key.toLowerCase().slice(2)
           dom.removeEventListener(eventType, prevProps[key])
           dom.addEventListener(eventType, nextProps[key])
+        } else if (key === 'style') {
+          Object.keys(nextProps[key]).forEach((styleKey) => {
+            dom.style[styleKey] = nextProps[key][styleKey]
+          })
         } else {
           dom[key] = nextProps[key]
         }
