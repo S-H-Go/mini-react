@@ -39,18 +39,7 @@ function render(vdom, container) {
   nextWorkOfUnit = wipRoot
 }
 
-function update() {
-  const currentFiber = wipFiber
-  return () => {
-    wipRoot = {
-      ...currentFiber,
-      alternate: currentFiber,
-    }
-    nextWorkOfUnit = wipRoot
-  }
-}
 let wipRoot = null
-let currentRoot = null
 let nextWorkOfUnit = {}
 let deletions = []
 let wipFiber = null
@@ -74,8 +63,7 @@ function commitRoot() {
   deletions.forEach(commitDeletion)
   commitWork(wipRoot.child)
   commitEffectHooks()
-  currentRoot = wipRoot
-  wipRoot = null
+  wipRoot = nextWorkOfUnit
   deletions = []
 }
 
@@ -324,7 +312,6 @@ function useEffect(callback, deps) {
   wipFiber.effectHooks = effectHooks
 }
 const React = {
-  update,
   createElement,
   render,
   useState,
